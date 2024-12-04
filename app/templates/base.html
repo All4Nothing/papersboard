@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}arXiv 논문 추천 시스템{% endblock %}</title>
+    <!-- 공통 스타일 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">홈</a></li>
+                <li><a href="/papers/latest">최신 논문</a></li>
+                <li><a href="/users">사용자</a></li>
+                <li><a href="/about">소개</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+        <!-- 여기에 개별 페이지 내용이 삽입됩니다 -->
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 arXiv 논문 추천 시스템. All rights reserved.</p>
+    </footer>
+
+    <!-- 공통 스크립트 -->
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

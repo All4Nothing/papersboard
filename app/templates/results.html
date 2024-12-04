@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Task 결과 - arXiv 논문 추천 시스템{% endblock %}
+
+{% block content %}
+<h1>Task별 논문 리스트</h1>
+<div id="task-results">
+    {% for task, papers in papers_by_task.items() %}
+    <div class="task-section">
+        <h2>{{ task }}</h2>
+        <ul>
+            {% for paper in papers %}
+            <li>{{ paper.title }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

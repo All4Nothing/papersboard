@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>논문 리스트</title>
+</head>
+<body>
+    <h1>논문 리스트</h1>
+    <div id="paper-list">
+        {% for paper in papers %}
+        <div class="paper-item">
+            <h2>{{ paper.title }}</h2>
+            <p><strong>Authors:</strong> {{ paper.authors }}</p>
+            <p><strong>Abstract:</strong> {{ paper.abstract }}</p>
+            <p><strong>Submitted Date:</strong> {{ paper.submitted_date }}</p>
+        </div>
+        <hr>
+        {% endfor %}
+    </div>
+</body>
+</html>
