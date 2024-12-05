@@ -9,5 +9,5 @@ from app.services.arxiv_service import fetch_latest_papers
 
 if __name__ == "__main__":
     # "Reinforcement Learning"과 관련된 논문 10개 가져오기
-    papers = fetch_latest_papers("Reinforcement Learning", max_results=10)
+    papers = fetch_latest_papers("Reinforcement Learning", max_results=10, last_days=7)
     print(papers)  # 반환된 데이터를 출력하여 확인

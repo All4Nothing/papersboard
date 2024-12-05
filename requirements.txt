@@ -5,3 +5,9 @@ requests
 beautifulsoup4
 gunicorn
 scikit-learn
+transformers
+torch
+torchvision
+torchaudio
+tqdm
+flask-cors
