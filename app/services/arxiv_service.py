@@ -3,7 +3,9 @@ import arxiv
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from app.services.database import save_paper_to_db, db, Paper
+from app.services.nlp_service import classify_domain_task_with_model
 import logging
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ def fetch_and_save_papers():
 def update_domain_tasks_with_model():
     papers = Paper.query.filter_by(domain_task=None).all()
 
-    for paper in papers:
+    for paper in tqdm(papers, desc="Classifying domain tasks"):
         paper.domain_task = classify_domain_task_with_model(paper.title, paper.abstract)
 
     db.session.commit()

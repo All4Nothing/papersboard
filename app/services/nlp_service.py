@@ -1,22 +1,17 @@
 from transformers import pipeline, AutoTokenizer
 from tqdm import tqdm
 import torch
-device = 0 if torch.cuda.is_available() else -1
+device = torch.device("mps")
 
 tokenizer = AutoTokenizer.from_pretrained("t5-small")
 
 summarizer = pipeline("summarization", model="t5-small", device=device)
-classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli", device=device)
 
-nlp_list = ["language", "nlp", "translation", "text", "speech"]
-cv_list = ["image", "vision", "object detection", "segmentation"]
-rl_list = ["reinforcement", "agent", "policy", "reward"]
-rec_list = ["recommendation", "collaborative", "ranking", "personalization"]
-
+candidate_labels = ["Computer Vision", "Natural Language Processing", "Reinforcement Learning", "Recommendation System"]
 
 def classify_domain_task_with_model(title, abstract):
     text = f"{title} {abstract}"
-    candidate_labels = nlp_list + cv_list + rl_list + rec_list + ["ohters"]
 
     result = classifier(text, candidate_labels)
     return result["labels"][0]
