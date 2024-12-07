@@ -11,3 +11,6 @@ torchvision
 torchaudio
 tqdm
 flask-cors
+apscheduler
+flask-sqlalchemy
+psycopg2
