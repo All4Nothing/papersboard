@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 from app.services.database import db, Paper
 from app.services.nlp_service import classify_domain_task_with_model
 
-main_routes = Blueprint("main_routes", __name__)
+main_routes = Blueprint("main_routes_", __name__, url_prefix='/api')
 
 # 메인 페이지
 @main_routes.route("/")
@@ -77,3 +77,21 @@ def classify_paper():
 
     task = classify_domain_task_with_model(title, abstract)
     return jsonify({"domain_task": task})
+
+@main_routes.route('/api/category_counts', methods=['GET'])
+def get_category_counts():
+    """
+    카테고리별 논문 수를 반환하는 API
+    """
+    category_counts = (
+        db.session.query(Paper.domain_task, db.func.count(Paper.id))
+        .group_by(Paper.domain_task)
+        .all()
+    )
+    
+    # 디버깅용 출력
+    print("Category Counts Raw Result:", category_counts)
+
+    # 데이터를 JSON 형식으로 반환
+    response = {category: count for category, count in category_counts}
+    return jsonify(response)

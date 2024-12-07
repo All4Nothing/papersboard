@@ -2,8 +2,7 @@ from flask import Flask
 from app.services.database import db
 from flask_migrate import Migrate
 
-from app.routes.main_routes import main_routes
-from app.routes.paper_routes import paper_routes
+from app.routes import register_blueprints  # Blueprint 등록 함수 가져오기
 
 
 migrate = Migrate()
@@ -23,7 +22,6 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    app.register_blueprint(main_routes, url_prefix='/api')
-    app.register_blueprint(paper_routes, url_prefix='/papers')
+    register_blueprints(app)
     
     return app
