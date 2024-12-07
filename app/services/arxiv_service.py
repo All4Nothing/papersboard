@@ -1,7 +1,8 @@
 import requests
+import arxiv
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
-from app.database import save_paper_to_db
+from app.services.database import save_paper_to_db, db, Paper
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,32 +22,41 @@ def categorize_papers(papers):
 
 def fetch_and_save_papers():
     """
-    Arxiv API에서 논문 데이터를 가져와 데이터베이스에 저장합니다.
+    Arxiv에서 논문 데이터를 수집하여 데이터베이스에 저장합니다.
     """
-    # 최근 7일 이내 제출된 논문
-    one_week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    query = "cat:cs.AI OR cat:cs.LG OR cat:cs.CV OR cat:stat.ML"
-    
-    params = {
-        "search_query": f"{query} AND submittedDate:[{one_week_ago} TO *]",
-        "start": 0,
-        "max_results": 200,
-        "sortBy": "submittedDate",
-        "sortOrder": "descending",
-    }
+    categories = ['cs.AI', 'cs.LG', 'cs.CV', 'stat.ML']
+    search_query = 'cat:' + ' OR cat:'.join(categories)
+    one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)  # UTC 기준 최근 7일
 
-    # Arxiv API 호출
-    response = requests.get(BASE_URL, params=params)
-    if response.status_code != 200:
-        print(f"Error fetching papers from Arxiv: {response.status_code}")
-        return
+    search = arxiv.Search(
+        query=search_query,
+        max_results=200,
+        sort_by=arxiv.SortCriterion.SubmittedDate,
+        sort_order=arxiv.SortOrder.Descending
+    )
 
-    # XML 응답 파싱
-    papers = parse_arxiv_response(response.text)
+    for result in search.results():
+        # 날짜를 필터링하여 1주일 이내 데이터만 처리
+        if result.published >= one_week_ago:  # aware datetime 비교
+            paper = Paper(
+                title=result.title,
+                abstract=result.summary,
+                authors=', '.join([author.name for author in result.authors]),
+                published_date=result.published,
+                source='arXiv',
+                url=result.entry_id
+            )
+            db.session.add(paper)
+
+    db.session.commit()
+
+def update_domain_tasks_with_model():
+    papers = Paper.query.filter_by(domain_task=None).all()
+
     for paper in papers:
-        save_paper_to_db(paper)  # 데이터베이스에 저장
-    print(f"{len(papers)} papers saved to the database.")
+        paper.domain_task = classify_domain_task_with_model(paper.title, paper.abstract)
 
+    db.session.commit()
 
 def parse_arxiv_response(xml_data):
     """

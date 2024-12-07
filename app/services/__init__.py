@@ -1,5 +1,5 @@
 # 서비스 모듈 임포트
-from .arxiv_service import fetch_latest_papers
+from .arxiv_service import fetch_and_save_papers
 from .data_processing import process_paper_data
 from .recommendation import recommend_papers
 

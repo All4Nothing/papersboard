@@ -1,31 +1,54 @@
 {% extends "base.html" %}
 
-{% block title %}논문 분석 - 핫한 AI 토픽{% endblock %}
+{% block title %}
+    논문 분석 - 핫한 AI 토픽
+{% endblock %}
 
 {% block content %}
 <h1>최근 1주일간 AI 논문 분석</h1>
 
 <h2>카테고리별 논문 개수</h2>
 <div id="category-chart"></div>
+
 <script>
-    const categoryCounts = {{ category_counts | tojson }};
+    // Flask에서 전달된 데이터를 JavaScript에서 사용할 수 있도록 설정
+    const categoryCounts = {{ category_counts | default({}) | tojson | safe }};
+    console.log("Category Counts:", categoryCounts);
+
+    // 카테고리와 해당 논문 개수 분리
     const categories = Object.keys(categoryCounts);
     const counts = Object.values(categoryCounts);
 
+    console.log("Categories:", categories);
+    console.log("Counts:", counts);
+
+    // Chart.js 데이터 구성
     const data = {
         labels: categories,
-        datasets: [{
-            label: '논문 개수',
-            data: counts,
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
-        }]
+        datasets: [
+            {
+                label: '논문 개수',
+                data: counts,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+            },
+        ],
     };
 
-    new Chart(document.getElementById('category-chart'), {
-        type: 'bar',
+    // Chart.js 차트 생성
+    new Chart(document.getElementById('category-chart').getContext('2d'), {
+        type: 'bar', // 차트 유형: 막대형
         data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+            },
+        },
     });
 </script>
 

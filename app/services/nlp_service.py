@@ -6,6 +6,20 @@ device = 0 if torch.cuda.is_available() else -1
 tokenizer = AutoTokenizer.from_pretrained("t5-small")
 
 summarizer = pipeline("summarization", model="t5-small", device=device)
+classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+
+nlp_list = ["language", "nlp", "translation", "text", "speech"]
+cv_list = ["image", "vision", "object detection", "segmentation"]
+rl_list = ["reinforcement", "agent", "policy", "reward"]
+rec_list = ["recommendation", "collaborative", "ranking", "personalization"]
+
+
+def classify_domain_task_with_model(title, abstract):
+    text = f"{title} {abstract}"
+    candidate_labels = nlp_list + cv_list + rl_list + rec_list + ["ohters"]
+
+    result = classifier(text, candidate_labels)
+    return result["labels"][0]
 
 def split_text_by_tokens(text, max_tokens=512):
     input_ids = tokenizer.encode(text, return_tensors='pt')[0]

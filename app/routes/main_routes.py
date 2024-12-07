@@ -1,42 +1,79 @@
 from flask import Blueprint, render_template, request, jsonify
-from transformers import pipeline
-from app.services.arxiv_service import fetch_latest_papers, categorize_papers
-from app.services.nlp_service import summarize_paper_abstracts, generate_weekly_report
+from app.services.database import db, Paper
+from app.services.nlp_service import classify_domain_task_with_model
 
 main_routes = Blueprint("main_routes", __name__)
 
-TASKS = [
-    "Reinforcement Learning",
-    "Computer Vision",
-    "Natural Language Processing",
-    "Recommendation System"
-]
-
+# 메인 페이지
 @main_routes.route("/")
 def index():
-    # 메인 페이지에서 task 버튼을 표시
-    papers = fetch_latest_papers()
-    category_counts = categorize_papers(papers)
-    summaries = summarize_paper_abstracts(papers)
-    weekly_report = generate_weekly_report(summaries)
-    return render_template("index.html", category_counts=category_counts, report=weekly_report, tasks=TASKS)
+    """
+    메인 페이지: 데이터베이스에서 최신 논문을 가져와 렌더링합니다.
+    """
+    categories = ["cs.AI", "cs.LG", "cs.CV", "stat.ML"]  # 딥러닝 관련 카테고리
+    papers = Paper.query.order_by(Paper.published_date.desc()).limit(20).all()
+    # category_counts 계산 (필수)
+    category_counts = {}
+    for category in categories:
+        count = Paper.query.filter_by(source=category).count()
+        category_counts[category] = count
 
-@main_routes.route("/results", methods=["POST"])
-def results():
-    # 사용자 선택한 task 리스트 가져오기
-    selected_tasks = request.form.getlist("tasks")
-    papers_by_task = {}
+    selected_category = request.args.get("category")  # 사용자가 선택한 카테고리
 
-    # 각 task에 대해 관련 논문 검색
-    for task in selected_tasks:
-        papers_by_task[task] = fetch_latest_papers(task, max_results=10, last_days=2)["data"]
+    if selected_category:
+        papers = Paper.query.filter(Paper.source == selected_category).order_by(Paper.published_date.desc()).all()
+    else:
+        papers = Paper.query.order_by(Paper.published_date.desc()).limit(20).all()  # 최근 20개 논문
 
-    # 결과 페이지 렌더링
-    return render_template("results.html", selected_tasks=selected_tasks, papers_by_task=papers_by_task)
+    return render_template("index.html", papers=papers, category_counts=category_counts)
 
-@main_routes.route("/api/report", methods=["GET"])
-def api_report():
-    papers = fetch_latest_papers()  # 최신 논문 가져오기
-    summaries = summarize_paper_abstracts(papers)  # 논문 요약 생성
-    report = generate_weekly_report(summaries)  # 최종 보고서 생성
-    return jsonify({"report": report})
+# 논문 데이터 JSON 반환
+@main_routes.route("/api/papers", methods=["GET"])
+def get_papers():
+    """
+    논문 데이터를 JSON 형식으로 반환합니다.
+    """
+    category = request.args.get("category")
+    if category:
+        papers = Paper.query.filter(Paper.source == category).order_by(Paper.published_date.desc()).all()
+    else:
+        papers = Paper.query.order_by(Paper.published_date.desc()).limit(20).all()
+
+    papers_data = [
+        {
+            "title": paper.title,
+            "abstract": paper.abstract,
+            "authors": paper.authors,
+            "published_date": paper.published_date.strftime("%Y-%m-%d"),
+            "url": paper.url,
+        }
+        for paper in papers
+    ]
+
+    return jsonify(papers_data)
+
+# 논문 검색 기능
+@main_routes.route("/search", methods=["GET"])
+def search_papers():
+    """
+    제목이나 초록으로 논문을 검색합니다.
+    """
+    query = request.args.get("q")
+    if query:
+        papers = Paper.query.filter(
+            (Paper.title.ilike(f"%{query}%")) | (Paper.abstract.ilike(f"%{query}%"))
+        ).order_by(Paper.published_date.desc()).all()
+    else:
+        papers = []
+
+    return render_template("search_results.html", papers=papers)
+
+@main_routes.route('/classify', methods=['POST'])
+def classify_paper():
+    """논문 제목과 초록을 기반으로 Domain Task를 분류하는 API."""
+    data = request.json
+    title = data.get("title", "")
+    abstract = data.get("abstract", "")
+
+    task = classify_domain_task_with_model(title, abstract)
+    return jsonify({"domain_task": task})
