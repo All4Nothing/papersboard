@@ -9,3 +9,4 @@ app = create_app()
 
 with app.app_context():
     fetch_and_save_papers()
+    print("Fetch Papers Completed")

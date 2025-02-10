@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from app.services.database import db, Paper
+from app.services.database import db
+from app.models.paper import Paper
 
 paper_routes = Blueprint("paper_routes", __name__)
 

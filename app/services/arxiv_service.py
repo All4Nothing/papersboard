@@ -2,7 +2,8 @@ import requests
 import arxiv
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
-from app.services.database import save_paper_to_db, db, Paper
+from app.services.database import db
+from app.models import Paper
 from app.services.nlp_service import classify_domain_task_with_model
 import logging
 from tqdm import tqdm
@@ -32,25 +33,47 @@ def fetch_and_save_papers():
 
     search = arxiv.Search(
         query=search_query,
-        max_results=200,
+        max_results=50,
         sort_by=arxiv.SortCriterion.SubmittedDate,
         sort_order=arxiv.SortOrder.Descending
     )
 
+    added_count = 0
+    skipped_count = 0
+
     for result in search.results():
         # 날짜를 필터링하여 1주일 이내 데이터만 처리
         if result.published >= one_week_ago:  # aware datetime 비교
+            
+            existing_paper = Paper.query.filter_by(url=result.entry_id).first()
+
+            if existing_paper:
+                print(f"🔍 저장된 논문 URL 예시: {existing_paper.url if existing_paper else 'None'}")
+                print(f"🔍 새로 가져온 논문 URL: {result.entry_id}")
+                print(f"Already existed paper : {result.title} (URL: {result.entry_id})")
+                skipped_count += 1
+                continue
+
             paper = Paper(
                 title=result.title,
                 abstract=result.summary,
                 authors=', '.join([author.name for author in result.authors]),
                 published_date=result.published,
                 source='arXiv',
-                url=result.entry_id
+                url=result.entry_id.strip()
             )
-            db.session.add(paper)
+            try:
+                db.session.add(paper)
+                db.session.commit()
+                added_count += 1
+                print(f"paper added: {result.title}")
+            except Exception as e:
+                print(f"paper add failed: {result.title} (error: {str(e)})")
+                db.session.rollback()
 
     db.session.commit()
+    print(f"{added_count} papers are added")
+    print(f"{skipped_count} papers are skipped")
 
 def update_domain_tasks_with_model():
     papers = Paper.query.filter_by(domain_task=None).all()

@@ -1,0 +1,1 @@
+from .paper import Paper  # Paper 모델을 임포트

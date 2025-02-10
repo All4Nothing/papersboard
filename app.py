@@ -30,4 +30,4 @@ def initialize_scheduler():
 # Flask 애플리케이션 실행
 if __name__ == "__main__":
     initialize_scheduler()
-    app.run(debug=True)
+    app.run(debug=True)                                                                                   
