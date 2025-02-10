@@ -54,13 +54,16 @@ def fetch_and_save_papers():
                 skipped_count += 1
                 continue
 
+            domain_task = classify_domain_task_with_model(result.title, result.summary)
+
             paper = Paper(
                 title=result.title,
                 abstract=result.summary,
                 authors=', '.join([author.name for author in result.authors]),
                 published_date=result.published,
                 source='arXiv',
-                url=result.entry_id.strip()
+                url=result.entry_id.strip(),
+                domain_task=domain_task,
             )
             try:
                 db.session.add(paper)
@@ -76,12 +79,16 @@ def fetch_and_save_papers():
     print(f"{skipped_count} papers are skipped")
 
 def update_domain_tasks_with_model():
-    papers = Paper.query.filter_by(domain_task=None).all()
+    """
+    기존 데이터 중 domain_task가 비어있는 논문을 찾아 분류 후 업데이트
+    """
+    papers = Paper.query.filter((Paper.domain_task == None) | (Paper.domain_task == "")).all()
 
-    for paper in tqdm(papers, desc="Classifying domain tasks"):
+    for paper in tqdm(papers, desc="Updating missing domain tasks"):
         paper.domain_task = classify_domain_task_with_model(paper.title, paper.abstract)
-
+    
     db.session.commit()
+    print(f"✅ Updated {len(papers)} papers with missing domain_task.")
 
 def parse_arxiv_response(xml_data):
     """

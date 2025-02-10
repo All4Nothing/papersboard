@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "react-scripts": "^3.0.1",
+    "webpack": "^5.97.1"
+  }
+}

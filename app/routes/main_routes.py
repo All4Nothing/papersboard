@@ -35,10 +35,18 @@ def get_papers():
     논문 데이터를 JSON 형식으로 반환합니다.
     """
     category = request.args.get("category")
+
+    # 🔍 디버깅 로그 추가
+    print(f"🔍 요청된 카테고리: {category}")
+
     if category:
-        papers = Paper.query.filter(Paper.source == category).order_by(Paper.published_date.desc()).all()
+        # `domain_task` 컬럼을 사용해 필터링하도록 수정
+        papers = Paper.query.filter(Paper.domain_task == category).order_by(Paper.published_date.desc()).all()
     else:
         papers = Paper.query.order_by(Paper.published_date.desc()).limit(20).all()
+
+    # 🔍 API 응답 확인
+    print(f"📄 반환된 논문 수: {len(papers)}")
 
     papers_data = [
         {
@@ -47,6 +55,7 @@ def get_papers():
             "authors": paper.authors,
             "published_date": paper.published_date.strftime("%Y-%m-%d"),
             "url": paper.url,
+            "domain_task": paper.domain_task,
         }
         for paper in papers
     ]

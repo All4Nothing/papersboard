@@ -1,6 +1,7 @@
 from flask import Flask
 from app.services.database import db
 from flask_migrate import Migrate
+from flask_cors import CORS
 from app.routes import register_blueprints
 import os
 
@@ -12,9 +13,15 @@ migrate = Migrate()
 def create_app():
     app = Flask(__name__)
 
-    # 📌 SQLite 데이터베이스 절대 경로 설정 (파일이 생성되는 위치를 명확히 하기 위해)
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # 현재 파일의 디렉토리 경로
-    DB_PATH = os.path.join(BASE_DIR, 'papers.db')  # 절대 경로로 설정
+    # ✅ CORS 활성화 (React에서 Flask API 호출 가능)
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+    # 📌 프로젝트 루트 경로 가져오기
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # 현재 `app/` 폴더 경로
+    ROOT_DIR = os.path.dirname(BASE_DIR)  # `papersboard/` 최상위 폴더 경로
+
+    # 📌 데이터베이스 파일을 프로젝트 루트 (`papersboard/`)에 생성하도록 변경
+    DB_PATH = os.path.join(ROOT_DIR, 'papers.db')
 
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
