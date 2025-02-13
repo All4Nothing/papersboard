@@ -36,3 +36,70 @@
     transform: rotate(360deg);
   }
 }
+
+.paper-list-container {
+  padding: 20px;
+  text-align: center;
+}
+
+/* 📌 가로 정렬을 위한 flexbox 설정 */
+.category-grid {
+  display: flex !important;  /* 가로 정렬 */
+  flex-wrap: nowrap; /* 줄바꿈 방지 */
+  justify-content: center; /* 가운데 정렬 */
+  gap: 10px; /* 간격을 줄임 */
+  overflow-x: auto; /* 가로 스크롤 허용 */
+  padding: 10px;
+  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+}
+
+/* 📌 각 카테고리를 개별 열로 설정 */
+.category-column {
+  flex: 0 0 280px; /* 각 카테고리 너비 설정 */
+  min-width: 250px;
+  max-width: 280px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  text-align: left;
+  white-space: normal; /* 텍스트는 줄바꿈 허용 */
+}
+
+.papers {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.paper-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.paper-card h3 {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.paper-card p {
+  font-size: 12px;
+  color: #555;
+  margin: 2px 0;
+}
+
+.paper-card a {
+  display: block;
+  margin-top: 3px;
+  text-decoration: none;
+  color: blue;
+  font-weight: bold;
+}
+
+.paper-card .summary {
+  font-style: italic;
+  color: #333;
+  font-size: 13px;
+}

@@ -1,5 +1,6 @@
 import React from "react";
 import PaperList from "./components/PaperList";
+import './App.css';
 
 function App() {
   return (

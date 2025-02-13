@@ -2,13 +2,20 @@ import requests
 import arxiv
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
+import logging
+import time
+from tqdm import tqdm
+
 from app.services.database import db
 from app.models import Paper
 from app.services.nlp_service import classify_domain_task_with_model
-import logging
-from tqdm import tqdm
+from app.models.last_update import LastUpdate
+from app.services.nlp_service import extract_keywords, summarize_long_text  # 키워드 추출 함수 불러오기
+
 
 logger = logging.getLogger(__name__)
+
+MAX_PAPER_COUNT = 1000
 
 BASE_URL = "http://export.arxiv.org/api/query"
 
@@ -33,50 +40,82 @@ def fetch_and_save_papers():
 
     search = arxiv.Search(
         query=search_query,
-        max_results=50,
+        max_results=MAX_PAPER_COUNT,
         sort_by=arxiv.SortCriterion.SubmittedDate,
         sort_order=arxiv.SortOrder.Descending
     )
 
+    try:
+        results = list(search.results())  # tqdm을 사용하기 위해 리스트로 변환
+        print(f" 🔍 {len(results)} papers found")
+        if not results:  # ✅ API 응답이 비어 있는 경우 예외 처리
+            print("arXiv에서 가져온 논문이 없습니다. (빈 결과)")
+            return
+
+    except arxiv.arxiv.UnexpectedEmptyPageError:
+        print("❌ arXiv API 오류: 빈 페이지가 반환되었습니다. 다시 시도해 주세요.")
+        return
+    
     added_count = 0
     skipped_count = 0
 
-    for result in search.results():
+    print(f"🔍 {len(results)} papers found")
+
+    for result in tqdm(results, desc="Adding papers", unit="paper"):
+        time.sleep(3)  # ✅ 요청 속도 제한 추가
+
         # 날짜를 필터링하여 1주일 이내 데이터만 처리
         if result.published >= one_week_ago:  # aware datetime 비교
             
             existing_paper = Paper.query.filter_by(url=result.entry_id).first()
 
             if existing_paper:
-                print(f"🔍 저장된 논문 URL 예시: {existing_paper.url if existing_paper else 'None'}")
-                print(f"🔍 새로 가져온 논문 URL: {result.entry_id}")
                 print(f"Already existed paper : {result.title} (URL: {result.entry_id})")
                 skipped_count += 1
                 continue
 
             domain_task = classify_domain_task_with_model(result.title, result.summary)
+            keywords = extract_keywords(result.summary)
+
+            summary = summarize_long_text(result.summary)
 
             paper = Paper(
                 title=result.title,
                 abstract=result.summary,
+                summary = summary, 
                 authors=', '.join([author.name for author in result.authors]),
                 published_date=result.published,
                 source='arXiv',
                 url=result.entry_id.strip(),
                 domain_task=domain_task,
+                keywords=", ".join(keywords)
             )
             try:
                 db.session.add(paper)
                 db.session.commit()
                 added_count += 1
-                print(f"paper added: {result.title}")
+                print(f"✅ paper added: {result.title}")
+    
             except Exception as e:
-                print(f"paper add failed: {result.title} (error: {str(e)})")
+                print(f"❌ paper add failed: {result.title} (error: {str(e)})")
                 db.session.rollback()
+    
+    # latest update time update
+    try:
+        print("🕒 Updating last_update timestamp")
+        db.session.query(LastUpdate).delete()
+        db.session.add(LastUpdate(updated_at=datetime.now()))
+        print(f"✅ Last update timestamp updated: {datetime.now()}")
+    except Exception as e:
+        print(f"❌ Last update timestamp update failed: {str(e)}")
+        db.session.rollback()
 
     db.session.commit()
-    print(f"{added_count} papers are added")
-    print(f"{skipped_count} papers are skipped")
+    print(f"✅ {added_count} papers are added")
+    print(f"❌ {skipped_count} papers are skipped")
+
+    # delete old papers
+    clean_old_papers()
 
 def update_domain_tasks_with_model():
     """
@@ -106,6 +145,22 @@ def parse_arxiv_response(xml_data):
         papers.append({"title": title.strip(), "abstract": summary.strip()})
 
     return papers
+
+def clean_old_papers():
+    """
+    Delete old papers from the database
+    """
+    total_papers = Paper.query.count()
+
+    if total_papers > MAX_PAPER_COUNT:
+        num_to_delete = total_papers - MAX_PAPER_COUNT
+        old_papers = Paper.query.order_by(Paper.published_date.asc()).limit(num_to_delete).all()
+
+        for paper in old_papers:
+            db.session.delete(paper)
+        db.session.commit()
+
+        print(f"✅ {num_to_delete} papers are deleted. {MAX_PAPER_COUNT} papers are remained.")
 
 '''def fetch_latest_papers(query="artificial intelligence", max_results=50, last_days=None):
     """

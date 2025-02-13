@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 from app.services.database import db
 from app.models.paper import Paper
 from app.services.nlp_service import classify_domain_task_with_model
+from app.models.last_update import LastUpdate
 
 main_routes = Blueprint("main_routes_", __name__, url_prefix='/api')
 
@@ -105,3 +106,39 @@ def get_category_counts():
     # 데이터를 JSON 형식으로 반환
     response = {category: count for category, count in category_counts}
     return jsonify(response)
+
+@main_routes.route('/api/last_update', methods=['GET'])
+def get_last_update():
+    """
+    return last update time in JSON format
+    """
+    last_update = LastUpdate.query.order_by(LastUpdate.updated_at.desc()).first()
+    if last_update:
+        return jsonify({"last_update": last_update.updated_at.strftime("%Y-%m-%d %H:%M:%S UTC")})
+    else:
+        return jsonify({"last_update": None})
+    
+@main_routes.route("/api/all_papers", methods=["GET"])
+def get_all_papers():
+    """
+    각 카테고리별 논문 리스트를 반환하는 API.
+    """
+    categories = ["Computer Vision", "Natural Language Processing", "Recommendation System", "Reinforcement Learning"]
+    papers_by_category = {}
+
+    for category in categories:
+        papers = Paper.query.filter_by(domain_task=category).order_by(Paper.published_date.desc()).limit(100).all()
+        papers_by_category[category] = [
+            {
+                "title": paper.title,
+                "abstract": paper.abstract,
+                "summary": paper.summary,
+                "authors": paper.authors,
+                "published_date": paper.published_date.strftime("%Y-%m-%d"),
+                "url": paper.url,
+                "keywords": paper.keywords 
+            }
+            for paper in papers
+        ]
+
+    return jsonify(papers_by_category)
