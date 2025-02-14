@@ -37,14 +37,7 @@ def summarize_long_text(text, max_tokens=512):
     """
     split text into chunks and summarize each chunk
     """
-    input_ids = tokenizer.encode(text, return_tensors='pt')[0]
-    chunks = []
-
-    # summarize 1st half of the text
-    for i in range(0, len(input_ids), max_tokens):
-        chunk_ids = input_ids[i:i + max_tokens]
-        chunk_text = tokenizer.decode(chunk_ids, skip_special_tokens=True)
-        chunks.append(chunk_text)
+    chunks = split_text_by_tokens(text=text, max_tokens=max_tokens)
 
     summaries = []
     for chunk in chunks:

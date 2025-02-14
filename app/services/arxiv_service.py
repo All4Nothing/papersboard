@@ -15,26 +15,39 @@ from app.services.nlp_service import extract_keywords, summarize_long_text  # �
 
 logger = logging.getLogger(__name__)
 
-MAX_PAPER_COUNT = 1000
+MAX_PAPER_COUNT = 500
 
 BASE_URL = "http://export.arxiv.org/api/query"
 
-def categorize_papers(papers):
+ARXIV_CATEGORY_MAPPING = {
+    "cs.AI": "Artificial Intelligence",
+    "cs.LG": "Machine Learning",
+    "cs.CV": "Computer Vision",
+    "cs.CL": "Natural Language Processing",
+    "cs.RO": "Robotics",
+    "cs.NE": "Neural Networks",
+    "cs.IR": "Information Retrieval",
+    "cs.MA": "Multi-Agent Systems",
+    "stat.ML": "Statistical Machine Learning",
+}
+
+def categorize_papers(arxiv_categories):
     """
     논문 데이터를 카테고리별로 분류합니다.
     """
-    category_counts = {}
-    for paper in papers:
-        categories = paper.get("categories", "").split()
-        for category in categories:
-            category_counts[category] = category_counts.get(category, 0) + 1
-    return category_counts
+    subject_labels = set()
+
+    for category in arxiv_categories.split():
+        if category in ARXIV_CATEGORY_MAPPING:
+            subject_labels.add(ARXIV_CATEGORY_MAPPING[category])
+
+    return ", ".join(subject_labels) if subject_labels else "Other"
 
 def fetch_and_save_papers():
     """
     Arxiv에서 논문 데이터를 수집하여 데이터베이스에 저장합니다.
     """
-    categories = ['cs.AI', 'cs.LG', 'cs.CV', 'stat.ML']
+    categories = ARXIV_CATEGORY_MAPPING.keys()
     search_query = 'cat:' + ' OR cat:'.join(categories)
     one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)  # UTC 기준 최근 7일
 
@@ -46,6 +59,7 @@ def fetch_and_save_papers():
     )
 
     try:
+        time.sleep(3)
         results = list(search.results())  # tqdm을 사용하기 위해 리스트로 변환
         print(f" 🔍 {len(results)} papers found")
         if not results:  # ✅ API 응답이 비어 있는 경우 예외 처리
@@ -74,9 +88,8 @@ def fetch_and_save_papers():
                 skipped_count += 1
                 continue
 
-            domain_task = classify_domain_task_with_model(result.title, result.summary)
+            domain_task = categorize_papers(result.primary_category)
             keywords = extract_keywords(result.summary)
-
             summary = summarize_long_text(result.summary)
 
             paper = Paper(
@@ -161,6 +174,25 @@ def clean_old_papers():
         db.session.commit()
 
         print(f"✅ {num_to_delete} papers are deleted. {MAX_PAPER_COUNT} papers are remained.")
+
+def update_missing_paper_data():
+    papers_missing_summary = Paper.query.filter((Paper.summary == None) | (Paper.summary == "")).all()
+    papers_missing_keywords = Paper.query.filter((Paper.keywords == None) | (Paper.keywords == "")).all()
+    papers_missing_labels = Paper.query.filter((Paper.subject_label == None) | (Paper.subject_label == "")).all()
+
+    print(f"📌 Missing data: {len(papers_missing_summary)} summaries, {len(papers_missing_keywords)} keywords, {len(papers_missing_labels)} labels")
+
+    for paper in tqdm(papers_missing_summary, desc="Updating missing summaries"):
+        paper.summary = summarize_long_text(paper.abstract)
+        
+    for paper in tqdm(papers_missing_keywords, desc="Updating missing keywords"):
+        paper.keywords = ", ".join(extract_keywords(paper.abstract))
+
+    for paper in tqdm(papers_missing_labels, desc="Updating missing subject labels"):
+        paper.subject_label = classify_domain_task_with_model(paper.title, paper.abstract)
+
+    db.session.commit()
+    print(f"✅ Missing data updates completed.")
 
 '''def fetch_latest_papers(query="artificial intelligence", max_results=50, last_days=None):
     """

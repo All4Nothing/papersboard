@@ -2,11 +2,17 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const categories = [
-  "Computer Vision",
-  "Natural Language Processing",
-  "Recommendation System",
-  "Reinforcement Learning",
+    "Artificial Intelligence",
+    "Machine Learning",
+    "Computer Vision",
+    "Natural Language Processing",
+    "Robotics",
+    "Neural Networks",
+    "Information Retrieval",
+    "Multi-Agent Systems",
+    "Statistical Machine Learning",
 ];
+
 
 const PaperList = () => {
   const [papersByCategory, setPapersByCategory] = useState({});

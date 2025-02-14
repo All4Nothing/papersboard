@@ -123,7 +123,16 @@ def get_all_papers():
     """
     각 카테고리별 논문 리스트를 반환하는 API.
     """
-    categories = ["Computer Vision", "Natural Language Processing", "Recommendation System", "Reinforcement Learning"]
+    categories = ["Artificial Intelligence",
+    "Machine Learning",
+    "Computer Vision",
+    "Natural Language Processing",
+    "Robotics",
+    "Neural Networks",
+    "Information Retrieval",
+    "Multi-Agent Systems",
+    "Statistical Machine Learning"]
+    
     papers_by_category = {}
 
     for category in categories:

@@ -40,6 +40,9 @@
 .paper-list-container {
   padding: 20px;
   text-align: center;
+  overflow-x: auto;
+  width: max-content; /* 컨텐츠 크기에 맞게 조정 */
+  min-width: 100%;
 }
 
 /* 📌 가로 정렬을 위한 flexbox 설정 */
