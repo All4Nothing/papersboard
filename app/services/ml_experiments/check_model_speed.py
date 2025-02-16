@@ -4,16 +4,18 @@ import pandas as pd
 from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 from tqdm import tqdm
+from peft import get_peft_model, LoraConfig, TaskType
+
 from app.services.ml_experiments.data_preprocess import preprocess_abstract_data
 
 device = torch.device("mps")
 
 models = [
-    # "google/flan-t5-base",
+    "google/flan-t5-base",
     # "google/flan-t5-large",
     # "google/flan-t5-xl"
     # "facebook/bart-large-cnn",
-    "sshleifer/distilbart-cnn-6-6"
+    # "sshleifer/distilbart-cnn-6-6"
 ]
 
 db_path = "papers.db"
@@ -30,26 +32,38 @@ results = {}
 for model_name in models:
     print(f"🚀 Loading model {model_name}")
 
+    lora_config = LoraConfig(
+        task_type=TaskType.SEQ_2_SEQ_LM,
+        r=8,
+        lora_alpha=32,
+        lora_dropout=0.1
+    )
+
     model = AutoModelForSeq2SeqLM.from_pretrained(
         model_name,
         torch_dtype=torch.float16,
-        device_map="auto"
     )
+
+
+    model = get_peft_model(model, lora_config)
+    model.to(device)  # 모델을 GPU/MPS로 이동
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    summarizer = pipeline("summarization", model=model_name, tokenizer=tokenizer, device=device)
+    # summarizer = pipeline("summarization", model=model, tokenizer=tokenizer, device=device)
 
     total_time = 0
     summaries = []
-
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
     
 
     for idx, row in tqdm(df.iterrows(), total=len(df), desc=f"Summarizing with {model_name}", unit="paper"):
         start_time = time.time()
         preprocessed_data = preprocess_abstract_data(row["abstract"])
-        summary = summarizer(preprocessed_data, max_length=150, min_length=50, do_sample=False)[0]['summary_text']
+
+        inputs = tokenizer(preprocessed_data, return_tensors="pt", max_length=512, truncation=True).to(device)
+        outputs = model.generate(**inputs, max_length=150, min_length=50)
+        summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        # summary = summarizer(preprocessed_data, max_length=150, min_length=50, do_sample=False)[0]['summary_text']
 
         elapsed_time = time.time() - start_time
         total_time += elapsed_time
