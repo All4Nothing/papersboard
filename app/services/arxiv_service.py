@@ -15,7 +15,7 @@ from app.services.nlp_service import extract_keywords, summarize_long_text  # �
 
 logger = logging.getLogger(__name__)
 
-MAX_PAPER_COUNT = 500
+MAX_PAPER_COUNT = 100
 
 BASE_URL = "http://export.arxiv.org/api/query"
 
@@ -49,7 +49,7 @@ def fetch_and_save_papers():
     """
     categories = ARXIV_CATEGORY_MAPPING.keys()
     search_query = 'cat:' + ' OR cat:'.join(categories)
-    one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)  # UTC 기준 최근 7일
+    one_week_ago = datetime.now(timezone.utc) - timedelta(days=31)  # UTC 기준 최근 7일
 
     search = arxiv.Search(
         query=search_query,
@@ -66,7 +66,7 @@ def fetch_and_save_papers():
             print("arXiv에서 가져온 논문이 없습니다. (빈 결과)")
             return
 
-    except arxiv.arxiv.UnexpectedEmptyPageError:
+    except arxiv.UnexpectedEmptyPageError:
         print("❌ arXiv API 오류: 빈 페이지가 반환되었습니다. 다시 시도해 주세요.")
         return
     
@@ -89,19 +89,17 @@ def fetch_and_save_papers():
                 continue
 
             domain_task = categorize_papers(result.primary_category)
-            keywords = extract_keywords(result.summary)
-            summary = summarize_long_text(result.summary)
+            # summary = summarize_long_text(result.summary)
 
             paper = Paper(
                 title=result.title,
                 abstract=result.summary,
-                summary = summary, 
                 authors=', '.join([author.name for author in result.authors]),
                 published_date=result.published,
                 source='arXiv',
                 url=result.entry_id.strip(),
                 domain_task=domain_task,
-                keywords=", ".join(keywords)
+                # summary = summary,
             )
             try:
                 db.session.add(paper)
@@ -184,7 +182,7 @@ def update_missing_paper_data():
 
     for paper in tqdm(papers_missing_summary, desc="Updating missing summaries"):
         paper.summary = summarize_long_text(paper.abstract)
-        
+
     for paper in tqdm(papers_missing_keywords, desc="Updating missing keywords"):
         paper.keywords = ", ".join(extract_keywords(paper.abstract))
 

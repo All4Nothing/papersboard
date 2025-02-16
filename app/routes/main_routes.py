@@ -141,11 +141,10 @@ def get_all_papers():
             {
                 "title": paper.title,
                 "abstract": paper.abstract,
-                "summary": paper.summary,
+                # "summary": paper.summary,
                 "authors": paper.authors,
                 "published_date": paper.published_date.strftime("%Y-%m-%d"),
                 "url": paper.url,
-                "keywords": paper.keywords 
             }
             for paper in papers
         ]

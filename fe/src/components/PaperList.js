@@ -56,6 +56,7 @@ const PaperList = () => {
 
       {/* 🕒 최근 업데이트 날짜 표시 */}
       <p>📅 Latest update: {lastUpdate ? lastUpdate : "Loading..."}</p>
+      <p>Update at Every 9am</p>
 
       {/* 🔍 검색창 */}
       <input
