@@ -12,10 +12,6 @@ device = torch.device("mps")
 
 models = [
     "google/flan-t5-base",
-    # "google/flan-t5-large",
-    # "google/flan-t5-xl"
-    # "facebook/bart-large-cnn",
-    # "sshleifer/distilbart-cnn-6-6"
 ]
 
 db_path = "papers.db"
