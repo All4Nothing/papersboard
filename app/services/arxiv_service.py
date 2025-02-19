@@ -8,9 +8,8 @@ from tqdm import tqdm
 
 from app.services.database import db
 from app.models import Paper
-from app.services.nlp_service import classify_domain_task_with_model
 from app.models.last_update import LastUpdate
-from app.services.nlp_service import extract_keywords, summarize_long_text  # 키워드 추출 함수 불러오기
+from app.services.nlp_service import  summarize_abstract 
 
 
 logger = logging.getLogger(__name__)
@@ -89,7 +88,7 @@ def fetch_and_save_papers():
                 continue
 
             domain_task = categorize_papers(result.primary_category)
-            # summary = summarize_long_text(result.summary)
+            summary = summarize_abstract(result.summary)
 
             paper = Paper(
                 title=result.title,
@@ -99,13 +98,14 @@ def fetch_and_save_papers():
                 source='arXiv',
                 url=result.entry_id.strip(),
                 domain_task=domain_task,
-                # summary = summary,
+                summary = summary,
             )
             try:
                 db.session.add(paper)
                 db.session.commit()
                 added_count += 1
                 print(f"✅ paper added: {result.title}")
+                print(f"summary: {summary}")
     
             except Exception as e:
                 print(f"❌ paper add failed: {result.title} (error: {str(e)})")
@@ -127,18 +127,6 @@ def fetch_and_save_papers():
 
     # delete old papers
     clean_old_papers()
-
-def update_domain_tasks_with_model():
-    """
-    기존 데이터 중 domain_task가 비어있는 논문을 찾아 분류 후 업데이트
-    """
-    papers = Paper.query.filter((Paper.domain_task == None) | (Paper.domain_task == "")).all()
-
-    for paper in tqdm(papers, desc="Updating missing domain tasks"):
-        paper.domain_task = classify_domain_task_with_model(paper.title, paper.abstract)
-    
-    db.session.commit()
-    print(f"✅ Updated {len(papers)} papers with missing domain_task.")
 
 def parse_arxiv_response(xml_data):
     """
@@ -172,56 +160,3 @@ def clean_old_papers():
         db.session.commit()
 
         print(f"✅ {num_to_delete} papers are deleted. {MAX_PAPER_COUNT} papers are remained.")
-
-def update_missing_paper_data():
-    papers_missing_summary = Paper.query.filter((Paper.summary == None) | (Paper.summary == "")).all()
-    papers_missing_keywords = Paper.query.filter((Paper.keywords == None) | (Paper.keywords == "")).all()
-    papers_missing_labels = Paper.query.filter((Paper.subject_label == None) | (Paper.subject_label == "")).all()
-
-    print(f"📌 Missing data: {len(papers_missing_summary)} summaries, {len(papers_missing_keywords)} keywords, {len(papers_missing_labels)} labels")
-
-    for paper in tqdm(papers_missing_summary, desc="Updating missing summaries"):
-        paper.summary = summarize_long_text(paper.abstract)
-
-    for paper in tqdm(papers_missing_keywords, desc="Updating missing keywords"):
-        paper.keywords = ", ".join(extract_keywords(paper.abstract))
-
-    for paper in tqdm(papers_missing_labels, desc="Updating missing subject labels"):
-        paper.subject_label = classify_domain_task_with_model(paper.title, paper.abstract)
-
-    db.session.commit()
-    print(f"✅ Missing data updates completed.")
-
-'''def fetch_latest_papers(query="artificial intelligence", max_results=50, last_days=None):
-    """
-    arXiv에서 최신 논문 데이터를 가져옵니다. 
-    날짜 필터링 기능이 추가되었습니다.
-
-    Args:
-        query (str): 검색할 쿼리.
-        max_results (int): 최대 논문 개수.
-        last_days (int, optional): 최근 몇 일 동안의 데이터를 가져올지.
-
-    Returns:
-        list: 논문 리스트.
-    """
-    params = {
-        "search_query": f"all:{query}",
-        "start": 0,
-        "max_results": max_results,
-        "sortBy": "submittedDate",
-        "sortOrder": "descending",
-    }
-
-    # 날짜 필터링
-    if last_days:
-        # 현재 UTC 시간에서 last_days만큼 이전의 날짜 계산
-        start_date = (datetime.now(timezone.utc) - timedelta(days=last_days)).strftime('%Y%m%d%H%M%S')
-        # submittedDate 필드를 사용하여 날짜 범위 지정
-        params["search_query"] += f" AND submittedDate:[{start_date} TO *]"
-
-    response = requests.get(BASE_URL, params=params)
-    if response.status_code == 200:
-        return parse_arxiv_response(response.text)
-    else:
-        return []'''

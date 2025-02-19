@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const BASE_URL = process.env.REACT_APP_BASE_URL || "http://localhost:5000";  // 기본값 설정
+
 const categories = [
     "Artificial Intelligence",
     "Machine Learning",
@@ -23,7 +25,7 @@ const PaperList = () => {
   useEffect(() => {
     const fetchLastUpdate = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:5000/api/last_update");
+        const response = await axios.get(`${BASE_URL}/api/last_update`);
         setLastUpdate(response.data.last_update);
       } catch (error) {
         console.error("❌ Error fetching last update:", error);
@@ -38,7 +40,7 @@ const PaperList = () => {
     const fetchAllPapers = async () => {
       try {
         console.log("🔍 Fetching all category papers...");
-        const response = await axios.get("http://127.0.0.1:5000/api/all_papers");
+        const response = await axios.get(`${BASE_URL}/api/all_papers`);
 
         console.log("📄 Received papers:", response.data);
         setPapersByCategory(response.data); // 카테고리별로 데이터 저장

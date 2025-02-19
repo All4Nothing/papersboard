@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify
 from app.services.database import db
 from app.models.paper import Paper
-from app.services.nlp_service import classify_domain_task_with_model
 from app.models.last_update import LastUpdate
 
 main_routes = Blueprint("main_routes_", __name__, url_prefix='/api')

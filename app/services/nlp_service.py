@@ -1,56 +1,34 @@
-from transformers import pipeline, AutoTokenizer
 from tqdm import tqdm
 import torch
-import spacy
 from collections import Counter
 from app.services.database import db
 from app.models import Paper
+from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM, BitsAndBytesConfig
+from peft import PeftModel, PeftConfig
 
 
-device = torch.device("mps")
-model = "google/flan-t5-small"
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model_name = "google/flan-t5-base"
 
-tokenizer = AutoTokenizer.from_pretrained(model)
+peft_model_name = "../papersboard/app/services/ml_services/results"
+config = PeftConfig.from_pretrained(peft_model_name)
 
-summarizer = pipeline("summarization", model=model, device=device)
-classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli", device=device)
-extracter = spacy.load("en_core_web_sm")
+bnb_config = BitsAndBytesConfig(
+    load_in_8bit = True,
+)
 
-candidate_labels = ["Computer Vision", "Natural Language Processing", "Reinforcement Learning", "Recommendation System"]
+model = AutoModelForSeq2SeqLM.from_pretrained(config.base_model_name_or_path, quantization_config=bnb_config, device_map={"":0})
+tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path)
 
-def classify_domain_task_with_model(title, abstract):
-    text = f"{title} {abstract}"
+model = PeftModel.from_pretrained(model, peft_model_name, device_map={"":0})
+model.eval()
 
-    result = classifier(text, candidate_labels)
-    return result["labels"][0]
-
-def split_text_by_tokens(text, max_tokens=512):
-    input_ids = tokenizer.encode(text, return_tensors='pt')[0]
-    chunks = []
-    for i in range(0, len(input_ids), max_tokens):
-        chunk_ids = input_ids[i:i + max_tokens]
-        chunk_text = tokenizer.decode(chunk_ids, skip_special_tokens=True)
-        chunks.append(chunk_text)
-    return chunks
-
-def summarize_long_text(text, max_tokens=512):
-    """
-    split text into chunks and summarize each chunk
-    """
-    chunks = split_text_by_tokens(text=text, max_tokens=max_tokens)
-
-    summaries = []
-    for chunk in chunks:
-        max_length = min(150, len(tokenizer.encode(chunk)) // 2)
-        summary = summarizer(chunk, max_length=max_length, min_length=max_length // 2, do_sample=False)
-        summaries.append(summary[0]['summary_text'])
+def summarize_abstract(text, max_tokens=512):
+    input_ids = tokenizer(text, return_tensors="pt", truncation=True).input_ids.cuda()
+    outputs = model.generate(input_ids=input_ids, max_new_tokens=150, do_sample=True, top_p=0.9)
+    summary = tokenizer.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)[0]
     
-    # summarize all chunks
-    final_summary = ' '.join(summaries)
-    if len(final_summary.split()) > 100:
-        final_summary = summarizer(final_summary, max_length=100, min_length=50, do_sample=False)[0]['summary_text']
-
-    return final_summary
+    return summary
 
 def summarize_paper_abstracts():
     """

@@ -17,7 +17,7 @@
     "react-scripts": "^5.0.1",
     "svgo": "^3.3.2",
     "web-vitals": "^2.1.4",
-    "webpack": "^5.97.1"
+    "webpack": "^4.42.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -42,6 +42,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "proxy": "http://127.0.0.1:5000"
+  }
 }
