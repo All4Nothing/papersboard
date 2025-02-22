@@ -75,13 +75,6 @@
   gap: 5px;
 }
 
-.paper-card {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 8px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
 .paper-card h3 {
   font-size: 14px;
   margin-bottom: 4px;
@@ -97,12 +90,112 @@
   display: block;
   margin-top: 3px;
   text-decoration: none;
-  color: blue;
+  color: lightcoral;
   font-weight: bold;
 }
 
 .paper-card .summary {
   font-style: italic;
   color: #333;
-  font-size: 13px;
+  font-size: 30px;
+}
+
+.search-input {
+  width: 30%;
+  padding: 10px;
+  margin-bottom: 20px; /* ✅ 검색창과 카테고리 간격 추가 */
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.category-container {
+  width: 300px; /* ✅ 컨테이너 크기 고정 */
+  height: auto; /* ✅ 내용에 따라 크기 조정 */
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  overflow: hidden;
+  white-space: normal; /* ✅ 내용이 넘치면 자동 줄바꿈 */
+  word-wrap: break-word; /* ✅ 긴 단어도 자동 줄바꿈 */
+  align-items: center;
+}
+
+.category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.papers-container {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.category-button {
+  padding: 5px 10px;
+  border: none;
+  background-color: #ddd;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: 0.3s;
+  font-size: 14px;
+  white-space: normal; /* ✅ 버튼 내부 글자도 줄바꿈 허용 */
+  word-wrap: break-word;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.category-button:hover {
+  background-color: #bbb;
+}
+
+.category-button.active {
+  background-color: lightcoral;
+  color: white;
+}
+
+.paper-card {
+  width: 90%; /* ✅ 고정된 크기 유지 */
+  margin: 0 auto;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  text-align: left;
+  white-space: normal; /* ✅ 내용이 넘치면 자동 줄바꿈 */
+  word-wrap: break-word;
+}
+
+.paper-card a {
+  display: block;
+  margin-top: 5px;
+  color: #007bff;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.paper-card a:hover {
+  text-decoration: underline;
+}
+
+.summary-text {
+  font-size: 14px;  
+  font-weight: italic; 
+  color: #333;  
+  white-space: pre-line;
+}
+
+.summary-section {
+  font-size: 14px;  
+  font-weight: italic; 
+  color: lightcoral;  
 }
