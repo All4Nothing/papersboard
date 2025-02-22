@@ -1,18 +1,14 @@
 ![papersboard](https://github.com/user-attachments/assets/6e7aea6e-4194-4266-b73b-1cdcc2dec3b3)
 # PapersBoard: 논문 요약 대시보드
-PapersBaord는 ArXiv에 올라오는 최신 AI 논문을 한 눈에 파악할 수 있는 웹사이트입니다.
 PapersBaord는 ArXiv에 올라오는 최신 AI 논문을 한눈에 파악할 수 있는 웹사이트입니다.
 
 ## Example & Main features
-- 자신이 원하는 AI 도메인을을 자유롭게 선택하여, 각 도메인의 최신 논문을 확인할 수 있다.
 - 자신이 원하는 AI 도메인을 자유롭게 선택하여, 각 도메인의 최신 논문을 확인할 수 있다.
 - 각 논문의 제목, 저자, 발행일자, PDF 링크를 확인할 수 있으며, LLM 모델이 생성한 3줄 요약을 볼 수 있다.
 
 ## Model Summarization
 Flan-T5-Base를 요약에 적합하도록 QLoRA fine-tuning하여 사용
 ### QLoRA fine-tuning
-- Flan-T5-Base 모델을 int8로 quantizing(양자화)한 후 LoRA(Low Rank Adaption)을 적용하여 가용 가능한 자원 (NVIDIA T4 VRAM 16GB) 내에서 학습이 가능하도록 함
-- 학습 가능한 parameters 수를 0.7%(all params: 249,347,328 $\rightarrow$ trainable params: 1,769,472) 수준으로 낮춰, 학습 속도를 25% 개선함(train sample per second: 6.919m/s $\rightarrow$ 5.18m/s)  
 - Flan-T5-Base 모델을 int8로 quantizing(양자화)한 후 LoRA(Low Rank Adaption)를 적용하여 가용할 수 있는 자원 (NVIDIA T4 VRAM 16GB) 내에서 학습할 수 있게 함
 - 학습할 수 있는 parameters 수를 0.7%(all params: 249,347,328 $\rightarrow$ trainable params: 1,769,472) 수준으로 낮춰, 학습 속도를 25% 개선함(train sample per second: 6.919m/s $\rightarrow$ 5.18m/s)  
 [모델 학습 Code](https://www.kaggle.com/code/outoftime/t5-base-with-qlora/notebook)
