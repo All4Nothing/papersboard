@@ -1,6 +1,6 @@
 ![papersboard](https://github.com/user-attachments/assets/6e7aea6e-4194-4266-b73b-1cdcc2dec3b3)
-# PapersBoard: 논문 요약 대시보드
-PapersBaord는 ArXiv에 올라오는 최신 AI 논문을 한눈에 파악할 수 있는 웹사이트입니다.
+# PapersBoard: 논문 요약 대시보드 with LLM
+PapersBaord는 ArXiv에 올라오는 최신 AI 논문을 LLM 모델을 이용해 요약하여, 한눈에 파악할 수 있는 웹사이트입니다.
 
 ## Example & Main features
 - 자신이 원하는 AI 도메인을 자유롭게 선택하여, 각 도메인의 최신 논문을 확인할 수 있다.
