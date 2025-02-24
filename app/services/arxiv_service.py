@@ -9,7 +9,7 @@ from tqdm import tqdm
 from app.services.database import db
 from app.models import Paper
 from app.models.last_update import LastUpdate
-from app.services.nlp_service import  summarize_abstract 
+from app.services.summarize_abstract import  summarize_abstract 
 
 
 logger = logging.getLogger(__name__)
@@ -31,9 +31,6 @@ ARXIV_CATEGORY_MAPPING = {
 }
 
 def categorize_papers(arxiv_categories):
-    """
-    논문 데이터를 카테고리별로 분류합니다.
-    """
     subject_labels = set()
 
     for category in arxiv_categories.split():
@@ -43,12 +40,9 @@ def categorize_papers(arxiv_categories):
     return ", ".join(subject_labels) if subject_labels else "Other"
 
 def fetch_and_save_papers():
-    """
-    Arxiv에서 논문 데이터를 수집하여 데이터베이스에 저장합니다.
-    """
     categories = ARXIV_CATEGORY_MAPPING.keys()
     search_query = 'cat:' + ' OR cat:'.join(categories)
-    one_week_ago = datetime.now(timezone.utc) - timedelta(days=31)  # UTC 기준 최근 7일
+    one_week_ago = datetime.now(timezone.utc) - timedelta(days=31)
 
     search = arxiv.Search(
         query=search_query,
@@ -59,14 +53,14 @@ def fetch_and_save_papers():
 
     try:
         time.sleep(3)
-        results = list(search.results())  # tqdm을 사용하기 위해 리스트로 변환
+        results = list(search.results())
         print(f" 🔍 {len(results)} papers found")
-        if not results:  # ✅ API 응답이 비어 있는 경우 예외 처리
-            print("arXiv에서 가져온 논문이 없습니다. (빈 결과)")
+        if not results: 
+            print("No papers found")
             return
 
     except arxiv.UnexpectedEmptyPageError:
-        print("❌ arXiv API 오류: 빈 페이지가 반환되었습니다. 다시 시도해 주세요.")
+        print("❌ ArXiv API Error: UnexpectedEmptyPageError")
         return
     
     added_count = 0
@@ -75,10 +69,9 @@ def fetch_and_save_papers():
     print(f"🔍 {len(results)} papers found")
 
     for result in tqdm(results, desc="Adding papers", unit="paper"):
-        time.sleep(3)  # ✅ 요청 속도 제한 추가
+        time.sleep(3)
 
-        # 날짜를 필터링하여 1주일 이내 데이터만 처리
-        if result.published >= one_week_ago:  # aware datetime 비교
+        if result.published >= one_week_ago:  
             
             existing_paper = Paper.query.filter_by(url=result.entry_id).first()
 
@@ -111,7 +104,6 @@ def fetch_and_save_papers():
                 print(f"❌ paper add failed: {result.title} (error: {str(e)})")
                 db.session.rollback()
     
-    # latest update time update
     try:
         print("🕒 Updating last_update timestamp")
         db.session.query(LastUpdate).delete()
@@ -125,18 +117,14 @@ def fetch_and_save_papers():
     print(f"✅ {added_count} papers are added")
     print(f"❌ {skipped_count} papers are skipped")
 
-    # delete old papers
     clean_old_papers()
 
 def parse_arxiv_response(xml_data):
-    """
-    arXiv API 응답 XML 데이터를 파싱하여 논문 제목과 초록을 추출합니다.
-    """
     root = ET.fromstring(xml_data)
     papers = []
 
     for paper in papers:
-        logger.info(f"불러온 논문 제목: {paper['title']}")
+        logger.info(f"Paper Title: {paper['title']}")
 
     for entry in root.findall("{http://www.w3.org/2005/Atom}entry"):
         title = entry.find("{http://www.w3.org/2005/Atom}title").text
@@ -146,9 +134,6 @@ def parse_arxiv_response(xml_data):
     return papers
 
 def clean_old_papers():
-    """
-    Delete old papers from the database
-    """
     total_papers = Paper.query.count()
 
     if total_papers > MAX_PAPER_COUNT:

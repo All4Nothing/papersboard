@@ -10,4 +10,4 @@ class Paper(db.Model):
     source = db.Column(db.String, nullable=True)
     url = db.Column(db.String, unique=True, nullable=False)
     domain_task = db.Column(db.String, nullable=True)
-    # summary = db.Column(db.Text, nullable=True)
+    summary = db.Column(db.Text, nullable=True)
