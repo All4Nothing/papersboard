@@ -11,7 +11,6 @@ Flan-T5-Base를 요약에 적합하도록 QLoRA fine-tuning하여 사용
 ### QLoRA fine-tuning
 - Flan-T5-Base 모델을 int8로 quantizing(양자화)한 후 LoRA(Low Rank Adaption)를 적용하여 가용할 수 있는 자원 (NVIDIA T4 VRAM 16GB) 내에서 학습할 수 있게 함
 - 학습할 수 있는 parameters 수를 0.7%(all params: 249,347,328 $\rightarrow$ trainable params: 1,769,472) 수준으로 낮춰, 학습 속도를 25% 개선함(train sample per second: 6.919m/s $\rightarrow$ 5.18m/s)  
-[모델 학습 Code](https://www.kaggle.com/code/outoftime/t5-base-with-qlora/notebook)
 
 ### Summarization Example
 - Title: [Bridging the Safety Gap: A Guardrail Pipeline for Trustworthy LLM Inferences](https://www.arxiv.org/abs/2502.08142)
