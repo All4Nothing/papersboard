@@ -27,6 +27,13 @@ Flan-T5-Base를 요약에 적합하도록 QLoRA fine-tuning하여 사용
 - Server: AWS EC2
 - Database: AWS RDS PostgreSQL
 - Model Server: GCP(Google Cloud Platform) Compute Engine
+
+### How to run
+**Install**
+1.
+2. `pip install -r requirements.txt`
+
+
 ### Reference
 [LoRA: Low-Rank Adaptation of Large Language Models
 ](https://arxiv.org/abs/2106.09685)
