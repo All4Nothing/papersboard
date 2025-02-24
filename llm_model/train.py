@@ -85,5 +85,3 @@ trainer.train()
 peft_model_name="results"
 trainer.model.save_pretrained(peft_model_name)
 tokenizer.save_pretrained(peft_model_name)
-
-trainer.evaluate()
