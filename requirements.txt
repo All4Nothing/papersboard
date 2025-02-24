@@ -19,3 +19,5 @@ pytz
 flask-migrate
 spacy
 peft
+bitsandbytes
+accelerate
