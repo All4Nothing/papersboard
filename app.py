@@ -20,14 +20,10 @@ import logging
 app = create_app()
 
 def initialize_scheduler():
-    """
-    논문 데이터를 매일 수집하기 위한 스케줄러를 설정합니다.
-    """
-    scheduler = BackgroundScheduler(timezone=utc)  # pytz.timezone 객체 사용
+    scheduler = BackgroundScheduler(timezone=utc)
     scheduler.add_job(func=fetch_and_save_papers, trigger='interval', days=1)
     scheduler.start()
 
-# Flask 애플리케이션 실행
 if __name__ == "__main__":
     initialize_scheduler()
     app.run(debug=True)                                                                                   
