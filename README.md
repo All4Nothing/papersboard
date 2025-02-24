@@ -28,10 +28,33 @@ Flan-T5-Base를 요약에 적합하도록 QLoRA fine-tuning하여 사용
 - Model Server: GCP(Google Cloud Platform) Compute Engine
 
 ### How to run
-**Install**
-1.
-2. `pip install -r requirements.txt`
-
+**Install**  
+```bash
+pip install -r requirements.txt`
+```  
+**Model train**  
+```bash
+python llm_model/train.py
+```
+**Create database**  
+```bash
+flask db init
+flask db migrate -m "Initialize database"
+flask db upgrade
+```
+**Fetch Papers and Save to DB**  
+```bash
+python scripts/fetch_papers.py
+```
+**Run frontend**  
+```bash
+cd fe
+npm start
+```
+**Run flask server**  
+```bash
+flask run
+```
 
 ### Reference
 [LoRA: Low-Rank Adaptation of Large Language Models
