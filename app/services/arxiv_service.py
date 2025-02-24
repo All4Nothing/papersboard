@@ -9,7 +9,7 @@ from tqdm import tqdm
 from app.services.database import db
 from app.models import Paper
 from app.models.last_update import LastUpdate
-from app.services.summarizer import  summarize_abstract 
+from llm_model.summarizer import  summarize_abstract 
 
 
 logger = logging.getLogger(__name__)

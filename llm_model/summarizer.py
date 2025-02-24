@@ -10,7 +10,7 @@ from peft import PeftModel, PeftConfig
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model_name = "google/flan-t5-base"
 
-peft_model_name = "../papersboard/app/services/ml_services/results"
+peft_model_name = "../papersboard/ml_model/results"
 config = PeftConfig.from_pretrained(peft_model_name)
 
 bnb_config = BitsAndBytesConfig(
